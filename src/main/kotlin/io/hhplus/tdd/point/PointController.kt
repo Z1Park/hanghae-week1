@@ -6,8 +6,16 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/point")
-class PointController {
+class PointController(
+    private val pointService: PointService
+) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
+
+    companion object {
+        const val LOG_MESSAGE_FORMAT = "call {}: {}"
+    }
+
+    private fun logging(method: String, param: String) = logger.info(LOG_MESSAGE_FORMAT, method, param)
 
     /**
      * TODO - 특정 유저의 포인트를 조회하는 기능을 작성해주세요.
@@ -16,7 +24,9 @@ class PointController {
     fun point(
         @PathVariable id: Long,
     ): UserPoint {
-        return UserPoint(0, 0, 0)
+        logging("point", "id=${id}")
+
+        return pointService.getUserPoint(id)
     }
 
     /**
