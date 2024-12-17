@@ -12,4 +12,16 @@ class PointService(
     private val pointHistoryTable: PointHistoryTable
 ) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
+
+    companion object {
+        const val LOG_MESSAGE_FORMAT = "call {}: {}"
+    }
+
+    private fun logging(method: String, param: String) = logger.info(LOG_MESSAGE_FORMAT, method, param)
+
+    fun getUserPoint(id: Long): UserPoint {
+        logging("getUserPoint", "id=${id}")
+
+        return userPointTable.selectById(id)
+    }
 }
