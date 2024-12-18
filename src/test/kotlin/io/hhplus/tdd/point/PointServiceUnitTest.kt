@@ -28,7 +28,8 @@ class PointServiceUnitTest {
 
     /**
      * 포인트 조회 정상 동작 테스트
-     * mock을 통한 포인트 조회 로직의 상태 및 행위 검증
+     * stubbing을 통한 포인트 조회 로직의 상태 검증
+     * UserPointTable의 메서드를 호출하여 반환하는 단순 로직인만큼 행위 검증도 추가
      */
     @Test
     fun `id를 통해 포인트를 조회한다`() {
@@ -50,7 +51,8 @@ class PointServiceUnitTest {
 
     /**
      * 포인트 내역 조회 정상 동작 테스트
-     * mock을 통한 포인트 조회 로직의 상태 및 행위 검증
+     * stubbing을 통한 포인트 조회 로직의 상태 검증
+     * PointHistoryTable의 메서드를 호출하여 반환하는 단순 로직인만큼 행위 검증도 추가
      */
     @Test
     fun `id를 통해 포인트 내역을 조회한다`() {
@@ -81,7 +83,9 @@ class PointServiceUnitTest {
     }
 
     /**
-     * 포인트 충전에 대한 정상 동작 테스트
+     * 포인트 충전에 대한 정상 동작 단위 테스트
+     * stubbing을 통해 충전 포인트에 대한 상태 검증
+     * 행위 검증은 최소한으로 하여 로직상 필요한 로직이 호출되는지만 확인
      */
     @Test
     fun `포인트 충전 성공`() {
