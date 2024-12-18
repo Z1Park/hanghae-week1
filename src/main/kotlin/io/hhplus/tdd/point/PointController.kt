@@ -49,7 +49,9 @@ class PointController(
         @PathVariable id: Long,
         @RequestBody amount: Long,
     ): UserPoint {
-        return UserPoint(0, 0, 0)
+        logging("charge", "id=${id}, amount=${amount}")
+
+        return pointService.chargePoint(id, amount)
     }
 
     /**

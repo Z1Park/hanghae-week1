@@ -10,10 +10,11 @@ class PointServiceTest {
 
     private val userPointTable = UserPointTable()
     private val pointHistoryTable = PointHistoryTable()
-    private val sut = PointService(userPointTable, pointHistoryTable)
+    private val pointValidator = PointValidator()
+    private val pointService = PointService(userPointTable, pointHistoryTable, pointValidator)
 
     /**
-     * 포인트 충전에 대한 통합 테스트
+     * 포인트 조회에 대한 통합 테스트
      */
     @Nested
     inner class `포인트 조회` {
@@ -26,7 +27,7 @@ class PointServiceTest {
             userPointTable.insertOrUpdate(101L, 1500L)
 
             // when
-            val actual = sut.getUserPoint(101L)
+            val actual = pointService.getUserPoint(101L)
 
             // then
             assertThat(actual.id).isEqualTo(101L)
@@ -41,7 +42,7 @@ class PointServiceTest {
             // given
 
             // when
-            val actual = sut.getUserPoint(102L)
+            val actual = pointService.getUserPoint(102L)
 
             // then
             assertThat(actual.id).isEqualTo(102L)
@@ -49,6 +50,9 @@ class PointServiceTest {
         }
     }
 
+    /**
+     * 포인트 내역에 조회 대한 통합 테스트
+     */
     @Nested
     inner class `포인트 내역 조회` {
         /**
@@ -64,20 +68,20 @@ class PointServiceTest {
             pointHistoryTable.insert(113L, 150L, TransactionType.CHARGE, 100L)
 
             // when
-            val userPointHistory = sut.getUserPointHistory(111L)
+            val actual = pointService.getUserPointHistory(111L)
 
             // then
-            assertThat(userPointHistory).hasSize(2)
+            assertThat(actual).hasSize(2)
 
-            assertThat(userPointHistory[0].userId).isEqualTo(111L)
-            assertThat(userPointHistory[0].amount).isEqualTo(800L)
-            assertThat(userPointHistory[0].type).isEqualTo(TransactionType.CHARGE)
-            assertThat(userPointHistory[0].timeMillis).isEqualTo(30L)
+            assertThat(actual[0].userId).isEqualTo(111L)
+            assertThat(actual[0].amount).isEqualTo(800L)
+            assertThat(actual[0].type).isEqualTo(TransactionType.CHARGE)
+            assertThat(actual[0].timeMillis).isEqualTo(30L)
 
-            assertThat(userPointHistory[1].userId).isEqualTo(111L)
-            assertThat(userPointHistory[1].amount).isEqualTo(300L)
-            assertThat(userPointHistory[1].type).isEqualTo(TransactionType.USE)
-            assertThat(userPointHistory[1].timeMillis).isEqualTo(80L)
+            assertThat(actual[1].userId).isEqualTo(111L)
+            assertThat(actual[1].amount).isEqualTo(300L)
+            assertThat(actual[1].type).isEqualTo(TransactionType.USE)
+            assertThat(actual[1].timeMillis).isEqualTo(80L)
         }
 
         /**
@@ -88,10 +92,41 @@ class PointServiceTest {
             // given
 
             // when
-            val userPointHistory = sut.getUserPointHistory(114L)
+            val actual = pointService.getUserPointHistory(114L)
 
             // then
-            assertThat(userPointHistory).isEmpty()
+            assertThat(actual).isEmpty()
+        }
+    }
+
+    /**
+     * 포인트 충전에 대한 통합 테스트
+     */
+    @Nested
+    inner class `포인트 충전` {
+        /**
+         * 포인트 충전 정상 동작에 대한 테스트
+         * userPointTable과 pointHistoryTable 클래스의 삽입, 조회 메서드는 무결한 동작임을 가정하고 작성
+         */
+        @Test
+        fun `유저 id를 통해 포인트를 충전할 수 있다`() {
+            // given
+            userPointTable.insertOrUpdate(121L, 1500L)
+
+            // when
+            val actual1 = pointService.chargePoint(121L, 710L)
+            val actual2 = pointHistoryTable.selectAllByUserId(121L)
+
+            //then
+            assertThat(actual1.id).isEqualTo(121L)
+            assertThat(actual1.point).isEqualTo(2210L)
+
+            assertThat(actual2).hasSize(1)
+
+            val set = actual2[0]
+            assertThat(set.userId).isEqualTo(121L)
+            assertThat(set.amount).isEqualTo(710L)
+            assertThat(set.type).isEqualTo(TransactionType.CHARGE)
         }
     }
 }
