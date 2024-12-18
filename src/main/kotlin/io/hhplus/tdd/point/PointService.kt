@@ -33,7 +33,7 @@ class PointService(
     }
 
     fun chargePoint(id: Long, amount: Long): UserPoint {
-        logging("chargePoint", "id=${id}");
+        logging("chargePoint", "id=${id}, amount=${amount}");
 
         val userPoint = userPointTable.selectById(id)
 
@@ -43,5 +43,20 @@ class PointService(
         pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updatedUserPoint.updateMillis)
 
         return updatedUserPoint
+    }
+
+    fun usePoint(id: Long, amount: Long): UserPoint {
+        logging("usePoint", "id=${id}, amount=${amount}");
+
+        val userPoint = userPointTable.selectById(id)
+
+        pointValidator.validateUseable(userPoint.point, amount)
+
+        val remainPoint = userPoint.point - amount
+        val usedUserPoint = userPointTable.insertOrUpdate(id, remainPoint)
+
+        pointHistoryTable.insert(id, amount, TransactionType.USE, usedUserPoint.updateMillis)
+
+        return usedUserPoint
     }
 }
