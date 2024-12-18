@@ -16,16 +16,19 @@ class PointServiceTest {
      * 포인트 충전에 대한 통합 테스트
      */
     @Nested
-    inner class `포인트 충전` {
+    inner class `포인트 조회` {
         /**
          * 정상 동작에 대한 테스트
          */
         @Test
         fun `id를 통해 포인트를 조회할 수 있다`() {
+            // given
             userPointTable.insertOrUpdate(101L, 1500L)
 
+            // when
             val actual = sut.getUserPoint(101L)
 
+            // then
             assertThat(actual.id).isEqualTo(101L)
             assertThat(actual.point).isEqualTo(1500L)
         }
@@ -35,11 +38,60 @@ class PointServiceTest {
          */
         @Test
         fun `없는 id로 조회하면 0 포인트로 조회된다`() {
+            // given
 
+            // when
             val actual = sut.getUserPoint(102L)
 
+            // then
             assertThat(actual.id).isEqualTo(102L)
             assertThat(actual.point).isEqualTo(0L)
+        }
+    }
+
+    @Nested
+    inner class `포인트 내역 조회` {
+        /**
+         * 정상 동작에 대한 테스트
+         * 여러 유저의 포인트 내역 중 일치하는 포인트 내역만 가져와야 한다.
+         */
+        @Test
+        fun `유저의 id를 통해 포인트 내역을 조회할 수 있다`() {
+            // given
+            pointHistoryTable.insert(111L, 800L, TransactionType.CHARGE, 30L)
+            pointHistoryTable.insert(111L, 300L, TransactionType.USE, 80L)
+            pointHistoryTable.insert(112L, 1000L, TransactionType.CHARGE, 10L)
+            pointHistoryTable.insert(113L, 150L, TransactionType.CHARGE, 100L)
+
+            // when
+            val userPointHistory = sut.getUserPointHistory(111L)
+
+            // then
+            assertThat(userPointHistory).hasSize(2)
+
+            assertThat(userPointHistory[0].userId).isEqualTo(111L)
+            assertThat(userPointHistory[0].amount).isEqualTo(800L)
+            assertThat(userPointHistory[0].type).isEqualTo(TransactionType.CHARGE)
+            assertThat(userPointHistory[0].timeMillis).isEqualTo(30L)
+
+            assertThat(userPointHistory[1].userId).isEqualTo(111L)
+            assertThat(userPointHistory[1].amount).isEqualTo(300L)
+            assertThat(userPointHistory[1].type).isEqualTo(TransactionType.USE)
+            assertThat(userPointHistory[1].timeMillis).isEqualTo(80L)
+        }
+
+        /**
+         * 사용한 적이 없는 유저의 id의 포인트 내역을 조회하는 예외 케이스 테스트
+         */
+        @Test
+        fun `없는 유저의 id로 포인트 내역을 조회 시 빈 리스트가 반환된다`() {
+            // given
+
+            // when
+            val userPointHistory = sut.getUserPointHistory(114L)
+
+            // then
+            assertThat(userPointHistory).isEmpty()
         }
     }
 }

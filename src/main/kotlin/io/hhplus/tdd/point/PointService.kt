@@ -24,4 +24,10 @@ class PointService(
 
         return userPointTable.selectById(id)
     }
+
+    fun getUserPointHistory(id: Long): List<PointHistory> {
+        logging("getUserPointHistory", "id=${id}");
+
+        return pointHistoryTable.selectAllByUserId(id)
+    }
 }
