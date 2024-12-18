@@ -88,7 +88,7 @@ class PointServiceUnitTest {
      * 행위 검증은 최소한으로 하여 로직상 필요한 로직이 호출되는지만 확인
      */
     @Test
-    fun `포인트 충전 성공`() {
+    fun `id를 통해 amount만큼 포인트를 충전한다`() {
         // given
         val userId = 21L
         val existingPoint = 800L
@@ -108,5 +108,33 @@ class PointServiceUnitTest {
 
         verify(pointValidator).validateChargeable(800L, 300L)
         verify(pointHistoryTable).insert(userId, chargeAmount, TransactionType.CHARGE, 20L)
+    }
+
+    /**
+     * 포인트 사용에 대한 정상 동작 단위 테스트
+     * stubbing을 통해 충전 포인트에 대한 상태 검증
+     * 행위 검증은 최소한으로 하여 로직상 필요한 로직이 호출되는지만 확인
+     */
+    @Test
+    fun `id를 통해 amount만큼 포인트를 사용한다`() {
+        // given
+        val userId = 31L
+        val existingPoint = 350L
+        val useAmount = 280L
+
+        val existingUserPoint = UserPoint(userId, existingPoint, 9L)
+
+        `when`(userPointTable.selectById(userId)).thenReturn(existingUserPoint)
+        `when`(userPointTable.insertOrUpdate(userId, existingPoint - useAmount))
+            .thenAnswer { invocation -> UserPoint(invocation.getArgument(0), invocation.getArgument(1), 18L) }
+
+        // when
+        val actual = pointService.usePoint(userId, useAmount)
+
+        //then
+        assertThat(actual.point).isEqualTo(70L)
+
+        verify(pointValidator).validateUseable(350L, 280L)
+        verify(pointHistoryTable).insert(userId, useAmount, TransactionType.USE, 18L)
     }
 }

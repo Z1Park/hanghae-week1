@@ -13,11 +13,8 @@ class PointServiceTest {
     private val pointValidator = PointValidator()
     private val pointService = PointService(userPointTable, pointHistoryTable, pointValidator)
 
-    /**
-     * 포인트 조회에 대한 통합 테스트
-     */
     @Nested
-    inner class `포인트 조회` {
+    inner class `포인트 조회 통합 테스트` {
         /**
          * 정상 동작에 대한 테스트
          */
@@ -50,11 +47,8 @@ class PointServiceTest {
         }
     }
 
-    /**
-     * 포인트 내역에 조회 대한 통합 테스트
-     */
     @Nested
-    inner class `포인트 내역 조회` {
+    inner class `포인트 내역 조회 통합 테스트` {
         /**
          * 정상 동작에 대한 테스트
          * 여러 유저의 포인트 내역 중 일치하는 포인트 내역만 가져와야 한다.
@@ -99,11 +93,8 @@ class PointServiceTest {
         }
     }
 
-    /**
-     * 포인트 충전에 대한 통합 테스트
-     */
     @Nested
-    inner class `포인트 충전` {
+    inner class `포인트 충전 통합 테스트` {
         /**
          * 포인트 충전 정상 동작에 대한 테스트
          * userPointTable과 pointHistoryTable 클래스의 삽입, 조회 메서드는 무결한 동작임을 가정하고 작성
@@ -111,14 +102,15 @@ class PointServiceTest {
         @Test
         fun `유저 id를 통해 포인트를 충전할 수 있다`() {
             // given
-            userPointTable.insertOrUpdate(121L, 1500L)
+            val userId = 121L
+            userPointTable.insertOrUpdate(userId, 1500L)
 
             // when
-            val actual1 = pointService.chargePoint(121L, 710L)
-            val actual2 = pointHistoryTable.selectAllByUserId(121L)
+            val actual1 = pointService.chargePoint(userId, 710L)
+            val actual2 = pointHistoryTable.selectAllByUserId(userId)
 
             //then
-            assertThat(actual1.id).isEqualTo(121L)
+            assertThat(actual1.id).isEqualTo(userId)
             assertThat(actual1.point).isEqualTo(2210L)
 
             assertThat(actual2).hasSize(1)
@@ -127,6 +119,35 @@ class PointServiceTest {
             assertThat(set.userId).isEqualTo(121L)
             assertThat(set.amount).isEqualTo(710L)
             assertThat(set.type).isEqualTo(TransactionType.CHARGE)
+        }
+    }
+
+    @Nested
+    inner class `포인트 사용 통합 테스트` {
+        /**
+         * 포인트 사용 정상 동작에 대한 테스트
+         * userPointTable과 pointHistoryTable 클래스의 삽입, 조회 메서드는 무결한 동작임을 가정하고 작성
+         */
+        @Test
+        fun `유저 id를 통해 포인트를 사용할 수 있다`() {
+            // given
+            val userId = 131L
+            userPointTable.insertOrUpdate(userId, 2000L)
+
+            // when
+            val actual1 = pointService.usePoint(userId, 170L)
+            val actual2 = pointHistoryTable.selectAllByUserId(userId)
+
+            //then
+            assertThat(actual1.id).isEqualTo(131L)
+            assertThat(actual1.point).isEqualTo(1830L)
+
+            assertThat(actual2).hasSize(1)
+
+            val set = actual2[0]
+            assertThat(set.userId).isEqualTo(131L)
+            assertThat(set.amount).isEqualTo(170L)
+            assertThat(set.type).isEqualTo(TransactionType.USE)
         }
     }
 }

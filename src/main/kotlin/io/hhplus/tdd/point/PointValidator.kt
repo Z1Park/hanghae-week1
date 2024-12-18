@@ -16,4 +16,9 @@ class PointValidator {
         if (chargePoint > CHARGE_LIMIT || chargePoint < 0)
             throw RuntimeException("한도를 초과하여 충전할 수 없습니다. 포인트=${point}, 충전 포인트=${amount}, 한도 포인트=${CHARGE_LIMIT}")
     }
+
+    fun validateUseable(point: Long, amount: Long) {
+        if (amount <= 0) throw RuntimeException("0 또는 음수 포인트는 사용할 수 없습니다. 사용 포인트=${amount}")
+        if (point < amount) throw RuntimeException("잔고가 부족하여 사용할 수 없습니다. 잔고 포인트=${point}, 사용 포인트=${amount}")
+    }
 }
