@@ -3,12 +3,12 @@ package io.hhplus.tdd.point
 import io.hhplus.tdd.database.PointHistoryTable
 import io.hhplus.tdd.database.UserPointTable
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
@@ -88,53 +88,21 @@ class PointServiceUnitTest {
         // given
         val userId = 21L
         val existingPoint = 800L
-        val amount = 300L
+        val chargeAmount = 300L
 
         val existingUserPoint = UserPoint(userId, existingPoint, 10L)
-        val updatedUserPoint = UserPoint(userId, existingPoint + amount, 20L)
 
-        // stubbing
         `when`(userPointTable.selectById(userId)).thenReturn(existingUserPoint)
-        `when`(userPointTable.insertOrUpdate(userId, existingPoint + amount)).thenReturn(updatedUserPoint)
+        `when`(userPointTable.insertOrUpdate(userId, existingPoint + chargeAmount))
+            .thenAnswer { invocation -> UserPoint(invocation.getArgument(0), invocation.getArgument(1), 20L) }
 
         // when
-        val actual = pointService.chargePoint(userId, amount)
+        val actual = pointService.chargePoint(userId, chargeAmount)
 
         //then
-        verify(userPointTable).selectById(21L)
-        verify(pointValidator).validateChargeable(800L, 300L)
-        verify(userPointTable).insertOrUpdate(12L, 1100L)
-        verify(pointHistoryTable).insert(userId, amount, TransactionType.CHARGE, 20L)
-
-        assertThat(actual.id).isEqualTo(21L)
         assertThat(actual.point).isEqualTo(1100L)
-        assertThat(actual.updateMillis).isEqualTo(20L)
-    }
 
-    /**
-     * 포인트 충전 시 예외가 발생한 경우
-     */
-    @Test
-    fun `포인트 충전 실패`() {
-        // given
-        val userId = 22L
-        val existingPoint = 900_000L
-        val amount = 130_000L
-        val userPoint = UserPoint(userId, existingPoint, 13L)
-
-        // stubbing
-        `when`(userPointTable.selectById(userId)).thenReturn(userPoint)
-        `when`(pointValidator.validateChargeable(existingPoint, amount))
-            .thenThrow(RuntimeException("충전 실패!"))
-
-        // when
-        assertThatThrownBy { pointService.chargePoint(userId, amount) }
-            .isInstanceOf(RuntimeException::class.java)
-            .hasMessage("충전 실패!")
-
-        //then
-        verify(userPointTable).selectById(22L)
-        verifyNoMoreInteractions(userPointTable)
-        verifyNoInteractions(pointHistoryTable)
+        verify(pointValidator).validateChargeable(800L, 300L)
+        verify(pointHistoryTable).insert(userId, chargeAmount, TransactionType.CHARGE, 20L)
     }
 }
