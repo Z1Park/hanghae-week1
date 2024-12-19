@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
-class PointServiceTest {
+class PointServiceIntegratedTest {
 
     private val userPointTable = UserPointTable()
     private val pointHistoryTable = PointHistoryTable()
@@ -19,7 +19,7 @@ class PointServiceTest {
          * 정상 동작에 대한 테스트
          */
         @Test
-        fun `id를 통해 포인트를 조회할 수 있다`() {
+        fun `101 포인트를 가진 유저를 조회하면 101 포인트가 조회된다`() {
             // given
             userPointTable.insertOrUpdate(101L, 1500L)
 
@@ -35,7 +35,7 @@ class PointServiceTest {
          * 사용한 적이 없는 유저의 id로 조회하는 예외 케이스 테스트
          */
         @Test
-        fun `없는 id로 조회하면 0 포인트로 조회된다`() {
+        fun `저장되지 않은 유저로 조회하면 0 포인트로 조회된다`() {
             // given
 
             // when
@@ -51,10 +51,9 @@ class PointServiceTest {
     inner class `포인트 내역 조회 통합 테스트` {
         /**
          * 정상 동작에 대한 테스트
-         * 여러 유저의 포인트 내역 중 일치하는 포인트 내역만 가져와야 한다.
          */
         @Test
-        fun `유저의 id를 통해 포인트 내역을 조회할 수 있다`() {
+        fun `여러 포인트 사용 기록 중 조회한 유저의 포인트 내역만 조회해온다`() {
             // given
             pointHistoryTable.insert(111L, 800L, TransactionType.CHARGE, 30L)
             pointHistoryTable.insert(111L, 300L, TransactionType.USE, 80L)
@@ -82,7 +81,7 @@ class PointServiceTest {
          * 사용한 적이 없는 유저의 id의 포인트 내역을 조회하는 예외 케이스 테스트
          */
         @Test
-        fun `없는 유저의 id로 포인트 내역을 조회 시 빈 리스트가 반환된다`() {
+        fun `저장되지 않은 유저로 포인트 내역을 조회 시 빈 리스트가 반환된다`() {
             // given
 
             // when
@@ -100,7 +99,7 @@ class PointServiceTest {
          * userPointTable과 pointHistoryTable 클래스의 삽입, 조회 메서드는 무결한 동작임을 가정하고 작성
          */
         @Test
-        fun `유저 id를 통해 포인트를 충전할 수 있다`() {
+        fun `1500 포인트를 가진 유저가 710 포인트를 충전하면 2210 포인트가 저장되어 있고 포인트 충전 기록이 추가된다`() {
             // given
             val userId = 121L
             userPointTable.insertOrUpdate(userId, 1500L)
@@ -129,7 +128,7 @@ class PointServiceTest {
          * userPointTable과 pointHistoryTable 클래스의 삽입, 조회 메서드는 무결한 동작임을 가정하고 작성
          */
         @Test
-        fun `유저 id를 통해 포인트를 사용할 수 있다`() {
+        fun `2000 포인트를 가진 유저가 170 포인트를 사용하면 1830 포인트가 저장되어 있고 포인트 사용 기록이 추가된다`() {
             // given
             val userId = 131L
             userPointTable.insertOrUpdate(userId, 2000L)
