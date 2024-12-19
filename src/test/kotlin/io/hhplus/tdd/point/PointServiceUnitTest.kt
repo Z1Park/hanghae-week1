@@ -32,7 +32,7 @@ class PointServiceUnitTest {
      * UserPointTable의 메서드를 호출하여 반환하는 단순 로직인만큼 행위 검증도 추가
      */
     @Test
-    fun `id를 통해 포인트를 조회한다`() {
+    fun `1000 포인트를 가진 유저를 조회하면, 1000 포인트가 반환된다`() {
         // given
         val userId = 1L
         val userPoint = UserPoint(userId, 1000L, 30L)
@@ -55,7 +55,7 @@ class PointServiceUnitTest {
      * PointHistoryTable의 메서드를 호출하여 반환하는 단순 로직인만큼 행위 검증도 추가
      */
     @Test
-    fun `id를 통해 포인트 내역을 조회한다`() {
+    fun `충전과 사용 기록을 가진 유저의 포인트 내역을 조회하면 해당 기록들이 반환된다`() {
         // given
         val userId = 11L
         val pointHistory1 = PointHistory(1L, userId, TransactionType.CHARGE, 1000L, 23L)
@@ -88,7 +88,7 @@ class PointServiceUnitTest {
      * 행위 검증은 최소한으로 하여 로직상 필요한 로직이 호출되는지만 확인
      */
     @Test
-    fun `id를 통해 amount만큼 포인트를 충전한다`() {
+    fun `800 포인트를 가진 유저에게 300 포인트를 충전하면 1100 포인트가 저장되고 300 포인트 충전 기록이 남는다`() {
         // given
         val userId = 21L
         val existingPoint = 800L
@@ -116,7 +116,7 @@ class PointServiceUnitTest {
      * 행위 검증은 최소한으로 하여 로직상 필요한 로직이 호출되는지만 확인
      */
     @Test
-    fun `id를 통해 amount만큼 포인트를 사용한다`() {
+    fun `350 포인트를 가진 유저가 280 포인트를 사용하면 70 포인트가 저장되고 280 포인트 사용 기록이 남는다`() {
         // given
         val userId = 31L
         val existingPoint = 350L
