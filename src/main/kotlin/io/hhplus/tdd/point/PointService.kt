@@ -13,49 +13,45 @@ class PointService(
     private val pointValidator: PointValidator
 ) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
-
-    companion object {
-        private const val LOG_MESSAGE_FORMAT = "call {}: {}"
-    }
-
-    private fun logging(method: String, param: String) = logger.info(LOG_MESSAGE_FORMAT, method, param)
+    private val pointLockManager = LockManager()
+    private val historyLockManager = LockManager()
 
     fun getUserPoint(id: Long): UserPoint {
-        logging("getUserPoint", "id=${id}")
-
-        return userPointTable.selectById(id)
+        return pointLockManager.read(id) { userPointTable.selectById(id) }
     }
 
     fun getUserPointHistory(id: Long): List<PointHistory> {
-        logging("getUserPointHistory", "id=${id}");
-
-        return pointHistoryTable.selectAllByUserId(id)
+        return historyLockManager.read(id) { pointHistoryTable.selectAllByUserId(id) }
     }
 
     fun chargePoint(id: Long, amount: Long): UserPoint {
-        logging("chargePoint", "id=${id}, amount=${amount}");
+        val updatedUserPoint = pointLockManager.write(id) {
+            val userPoint = userPointTable.selectById(id)
 
-        val userPoint = userPointTable.selectById(id)
+            pointValidator.validateChargeable(userPoint.point, amount)
+            userPointTable.insertOrUpdate(id, userPoint.point + amount)
+        }
 
-        pointValidator.validateChargeable(userPoint.point, amount)
-        val updatedUserPoint = userPointTable.insertOrUpdate(id, userPoint.point + amount)
-
-        pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updatedUserPoint.updateMillis)
+        historyLockManager.write(id) {
+            pointHistoryTable.insert(id, amount, TransactionType.CHARGE, updatedUserPoint.updateMillis)
+        }
 
         return updatedUserPoint
     }
 
     fun usePoint(id: Long, amount: Long): UserPoint {
-        logging("usePoint", "id=${id}, amount=${amount}");
+        val usedUserPoint = pointLockManager.write(id) {
+            val userPoint = userPointTable.selectById(id)
 
-        val userPoint = userPointTable.selectById(id)
+            pointValidator.validateUseable(userPoint.point, amount)
 
-        pointValidator.validateUseable(userPoint.point, amount)
+            val remainPoint = userPoint.point - amount
+            userPointTable.insertOrUpdate(id, remainPoint)
+        }
 
-        val remainPoint = userPoint.point - amount
-        val usedUserPoint = userPointTable.insertOrUpdate(id, remainPoint)
-
-        pointHistoryTable.insert(id, amount, TransactionType.USE, usedUserPoint.updateMillis)
+        historyLockManager.write(id) {
+            pointHistoryTable.insert(id, amount, TransactionType.USE, usedUserPoint.updateMillis)
+        }
 
         return usedUserPoint
     }
