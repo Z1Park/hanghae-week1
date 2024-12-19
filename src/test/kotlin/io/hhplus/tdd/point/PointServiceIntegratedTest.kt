@@ -5,14 +5,15 @@ import io.hhplus.tdd.database.UserPointTable
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 
-class PointServiceIntegratedTest {
-
-    private val userPointTable = UserPointTable()
-    private val pointHistoryTable = PointHistoryTable()
-    private val pointValidator = PointValidator()
-    private val pointService = PointService(userPointTable, pointHistoryTable, pointValidator)
-
+@SpringBootTest
+class PointServiceIntegratedTest(
+    @Autowired val userPointTable: UserPointTable,
+    @Autowired val pointHistoryTable: PointHistoryTable,
+    @Autowired val pointService: PointService
+) {
     @Nested
     inner class `포인트 조회 통합 테스트` {
         /**
